@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cafe Pinawo</title>
+
+  <!-- フォント（ロゴ用に Dancing Script） -->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== ベース ===== */
+    :root{
+      --bg:#f9f4f0;
+      --accent:#cfae9e;
+      --accent-dark:#b28c7e;
+      --text:#5a4a42;
+      --card:#fff8f6;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:'Noto Sans JP', sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-x:hidden;
+    }
+
+    /* ===== ローディング ===== */
+    #loader{
+      position:fixed;inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--bg);
+      z-index:9999;
+      font-family:'Dancing Script',cursive;
+      font-size:2rem;
+      color:var(--accent);
+      opacity:1;
+      transition:opacity .8s ease,visibility .8s ease;
+    }
+    #loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+
+    /* ===== ヘッダー / ロゴ ===== */
+    header{
+      position:sticky;top:0;
+      background:#f7e7dc;
+      z-index:50;
+      box-shadow:0 2px 6px rgba(0,0,0,0.06);
+      padding:16px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .logo{
+      margin:0;
+      font-family:'Dancing Script',cursive;
+      font-size:1.9rem;
+      color:#4e3a2e;
+      letter-spacing:1px;
+      text-shadow:0 1px 2px rgba(0,0,0,0.06);
+    }
+    nav{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    nav a{
+      color:var(--text);
+      text-decoration:none;
+      font-weight:600;
+      padding:6px 10px;
+      border-radius:8px;
+      transition:background .18s,color .18s,transform .18s;
+    }
+    nav a:hover{ background:#fff; transform:translateY(-2px); color:var(--accent-dark) }
+
+    /* ===== ヒーロー ===== */
+    .hero{
+      height:78vh;
+      min-height:420px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 20px;
+      position:relative;
+      background-image:url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1600&q=80');
+      background-size:cover;
+      background-position:center;
+      color:#fff;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;inset:0;
+      background:linear-gradient(rgba(0,0,0,0.28),rgba(0,0,0,0.18));
+    }
+    .hero-inner{
+      position:relative;z-index:1;
+      max-width:980px;
+    }
+    .hero h2{
+      margin:0;
+      font-size:2.0rem;
+      line-height:1.3;
+      color:#fff; /* 見やすく白 */
+      background:rgba(255,255,255,0.04);
+      display:inline-block;
+      padding:12px 20px;
+      border-radius:10px;
+      animation:fadeSlide 1.6s ease;
+    }
+    .hero .cta{
+      display:inline-block;
+      margin-top:20px;
+      text-decoration:none;
+      background:var(--accent);
+      color:#fff;
+      padding:12px 26px;
+      border-radius:28px;
+      font-weight:700;
+      box-shadow:0 6px 18px rgba(197,150,135,0.12);
+      transition:transform .18s,background .18s;
+    }
+    .hero .cta:hover{ transform:translateY(-4px); background:var(--accent-dark) }
+
+    @keyframes fadeSlide { from{opacity:0; transform:translateY(18px)} to{opacity:1; transform:translateY(0)} }
+
+    /* ===== セクション共通 ===== */
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:64px 20px;
+    }
+    section h2{
+      text-align:center;
+      margin:0 0 36px 0;
+      font-family:'Noto Sans JP',sans-serif;
+      font-size:1.6rem;
+      color:var(--text);
+      display:inline-block;
+      padding-bottom:6px;
+      border-bottom:2px solid rgba(227,200,187,0.6);
+    }
+
+    /* フェードイン用（IntersectionObserverで visible を付与） */
+    .fade{
+      opacity:0;
+      transform:translateY(28px);
+      transition:opacity .9s ease, transform .9s ease;
+    }
+    .fade.visible{ opacity:1; transform:translateY(0) }
+
+    /* ===== メニュー ===== */
+    .menu-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:24px;
+      align-items:start;
+    }
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:16px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.04);
+      text-align:center;
+    }
+    .card img{ width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:12px; }
+    .card h3{ margin:8px 0 6px 0; font-size:1.05rem }
+    .card p{ margin:0; color:#7d6b62; font-size:0.95rem }
+
+    /* ===== ギャラリー ===== */
+    .gallery-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+    }
+    .gallery-grid img{
+      width:100%;
+      aspect-ratio:1/1;
+      object-fit:cover;
+      border-radius:10px;
+      transform:translateY(18px) scale(.98);
+      opacity:0;
+      transition:opacity .9s ease, transform .9s ease;
+    }
+    .gallery-grid img.visible{ opacity:1; transform:translateY(0) scale(1) }
+
+    /* ===== 予約フォーム ===== */
+    form{
+      max-width:540px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    label{ font-size:0.9rem; color:#6e5c52; }
+    input[type="text"], input[type="email"], input[type="date"], input[type="time"], select, textarea{
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e2cfc4;
+      font-size:1rem;
+      background:#fff;
+    }
+    textarea{ min-height:120px; resize:vertical }
+    .btn{
+      background:var(--accent);
+      color:#fff;
+      border:none;
+      padding:12px 16px;
+      border-radius:28px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .btn:hover{ background:var(--accent-dark) }
+
+    .note{ text-align:center; color:#7d6b62; font-size:0.95rem; margin-top:8px }
+
+    /* ===== フッター ===== */
+    footer{ text-align:center; padding:28px 20px; background:#f7e7dc; color:var(--text); margin-top:40px }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width:900px){ .gallery-grid{ grid-template-columns:repeat(2,1fr) } }
+    @media (max-width:560px){
+      .hero h2{ font-size:1.4rem }
+      header{ padding:12px 14px }
+      .logo{ font-size:1.4rem }
+      nav{ display:none } /* シンプル化（必要ならハンバーガー追加可） */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ローダー -->
+  <div id="loader">Cafe Pinawo</div>
+
+  <!-- HEADER -->
+  <header>
+    <h1 class="logo">Cafe Pinawo</h1>
+    <nav aria-label="サイト内ナビ">
+      <a href="#home">トップ</a>
+      <a href="#menu">メニュー</a>
+      <a href="#gallery">ギャラリー</a>
+      <a href="#reserve">予約</a>
+      <a href="#contact">お問い合わせ</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <main id="home" class="hero" role="main">
+    <div class="hero-inner">
+      <h2>ふんわりやさしい、あなただけのじかんを。</h2>
+      <div>
+        <a class="cta" href="#menu">メニューを見る</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- MENU -->
+  <section id="menu" class="container fade">
+    <h2>メニュー</h2>
+    <div class="menu-grid" aria-hidden="false">
+      <article class="card fade">
+        <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=800&q=80" alt="カフェラテ">
+        <h3>カフェラテ</h3>
+        <p>香ばしいエスプレッソとやさしいミルクのバランス。</p>
+      </article>
+
+      <article class="card fade">
+        <img src="https://images.unsplash.com/photo-1551782450-17144efb9c50?auto=format&fit=crop&w=800&q=80" alt="ハニーラテ">
+        <h3>ハニーラテ</h3>
+        <p>はちみつの優しい甘さでほっとする一杯。</p>
+      </article>
+
+      <article class="card fade">
+        <img src="https://images.unsplash.com/photo-1575936123452-b67c3203c357?auto=format&fit=crop&w=800&q=80" alt="ベリースムージー">
+        <h3>ベリースムージー</h3>
+        <p>フレッシュなベリーを使った見た目もかわいいドリンク。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery" class="container fade">
+    <h2>ギャラリー</h2>
+    <div class="gallery-grid" aria-hidden="false">
+      <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80" alt="店内の雰囲気">
+      <img src="https://images.unsplash.com/photo-1542444459-db4a2ec92e65?auto=format&fit=crop&w=800&q=80" alt="デザート">
+      <img src="https://images.unsplash.com/photo-1570824104453-508955ab713e?auto=format&fit=crop&w=800&q=80" alt="コーヒーとスイーツ">
+      <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80" alt="外観イメージ">
+      <img src="https://images.unsplash.com/photo-1521302080372-8f3b6c87e97e?auto=format&fit=crop&w=800&q=80" alt="テーブルセッティング">
+      <img src="https://images.unsplash.com/photo-1526401485004-2fa806b5a3c1?auto=format&fit=crop&w=800&q=80" alt="飲み物アップ">
+      <img src="https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?auto=format&fit=crop&w=800&q=80" alt="デザート盛り合わせ">
+      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80" alt="カウンター">
+      <img src="https://images.unsplash.com/photo-1575936123452-b67c3203c357?auto=format&fit=crop&w=800&q=80" alt="ベリースムージー">
+    </div>
+  </section>
+
+  <!-- RESERVE -->
+  <section id="reserve" class="container fade" aria-labelledby="reserve-title">
+    <h2 id="reserve-title">予約</h2>
+
+    <form id="reserveForm" onsubmit="return false;">
+      <label for="r-name">お名前</label>
+      <input id="r-name" name="name" type="text" placeholder="例：田中 花子" required>
+
+      <label for="r-date">日付</label>
+      <input id="r-date" name="date" type="date" required>
+
+      <label for="r-time">時間</label>
+      <input id="r-time" name="time" type="time" required>
+
+      <label for="r-people">人数</label>
+      <select id="r-people" name="people" required>
+        <option value="1">1名</option>
+        <option value="2" selected>2名</option>
+        <option value="3">3名</option>
+        <option value="4">4名</option>
+        <option value="5">5名以上</option>
+      </select>
+
+      <label for="r-note">備考（任意）</label>
+      <textarea id="r-note" name="note" placeholder="窓側希望など"></textarea>
+
+      <button class="btn" id="reserveBtn" type="submit">予約する</button>
+      <div class="note" id="reserveMsg" aria-live="polite" style="display:none;margin-top:10px;color:#4b644a">予約を受け付けました（※これはデモ動作です）。</div>
+    </form>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="container fade" aria-labelledby="contact-title">
+    <h2 id="contact-title">お問い合わせ</h2>
+
+    <form id="contactForm" onsubmit="return false;">
+      <label for="c-name">お名前</label>
+      <input id="c-name" name="name" type="text" placeholder="例：山田 太郎" required>
+
+      <label for="c-email">メールアドレス</label>
+      <input id="c-email" name="email" type="email" placeholder="example@email.com" required>
+
+      <label for="c-message">メッセージ</label>
+      <textarea id="c-message" name="message" placeholder="お問い合わせ内容を入力してください..." required></textarea>
+
+      <button class="btn" id="contactBtn" type="submit">送信する</button>
+      <div class="note" id="contactMsg" aria-live="polite" style="display:none;margin-top:10px;color:#4b644a">お問い合わせありがとうございます（※これはデモ動作です）。</div>
+    </form>
+  </section>
+
+  <footer>
+    © 2025 Cafe Pinawo. All Rights Reserved.
+  </footer>
+
+  <!-- スクリプト（ローダー、アニメーション、フォーム処理） -->
+  <script>
+    // ローダー（ページ読み込み後にフェードアウト）
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('loader');
+      setTimeout(()=> loader.classList.add('hidden'), 800);
+      // hero を遅延で可視化（よりふんわり）
+      const hero = document.querySelector('.hero-inner h2');
+      if(hero) hero.style.opacity = '1';
+    });
+
+    // IntersectionObserver: fade 要素とギャラリー画像を可視化
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.18 });
+
+    document.querySelectorAll('.fade, .card.fade, .gallery-grid img').forEach(el => io.observe(el));
+
+    // 予約フォーム（デモ動作：送信後メッセージ表示・リセット）
+    const reserveForm = document.getElementById('reserveForm');
+    const reserveBtn = document.getElementById('reserveBtn');
+    const reserveMsg = document.getElementById('reserveMsg');
+
+    reserveForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // 実運用ではここでサーバー送信を行う（AJAX/fetch）
+      reserveMsg.style.display = 'block';
+      reserveBtn.disabled = true;
+      reserveBtn.textContent = '送信中...';
+      setTimeout(() => {
+        reserveForm.reset();
+        reserveMsg.style.display = 'none';
+        reserveBtn.disabled = false;
+        reserveBtn.textContent = '予約する';
+        alert('予約フォームはデモです：実際の運用ではサーバー側処理を追加してください。');
+      }, 1400);
+    });
+
+    // お問い合わせフォーム（デモ動作）
+    const contactForm = document.getElementById('contactForm');
+    const contactBtn = document.getElementById('contactBtn');
+    const contactMsg = document.getElementById('contactMsg');
+
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      contactMsg.style.display = 'block';
+      contactBtn.disabled = true;
+      contactBtn.textContent = '送信中...';
+      setTimeout(() => {
+        contactForm.reset();
+        contactMsg.style.display = 'none';
+        contactBtn.disabled = false;
+        contactBtn.textContent = '送信する';
+        alert('お問い合わせフォームはデモです：実際の運用ではサーバー側処理を追加してください。');
+      }, 1200);
+    });
+
+    // a[href^="#"] のスムーススクロール補正（固定ヘッダ分の余白）
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const href = a.getAttribute('href');
+        if(href.length>1){
+          e.preventDefault();
+          const el = document.querySelector(href);
+          if(el){
+            const y = el.getBoundingClientRect().top + window.pageYOffset - 64; // header 高さ分オフセット
+            window.scrollTo({top:y,behavior:'smooth'});
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
